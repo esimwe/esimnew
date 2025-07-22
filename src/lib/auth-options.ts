@@ -19,6 +19,7 @@ export const authOptions: NextAuthOptions = {
           image: profile.picture,
           emailVerified: new Date(),
           locale: profile.locale || 'en',
+          role: 'standard', // Google ile giriş yapanlara standart rol ata
         };
       },
     }),
