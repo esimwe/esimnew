@@ -51,8 +51,6 @@ export async function registerUser(formData: FormData) {
 
     // Redirect to login page with success message
     return { success: true, redirect: `/${locale}/login?registered=true` };
-
-    return { success: true };
   } catch (error) {
     console.error('Registration error:', error);
     return { success: false, message: 'Server error during registration' };
