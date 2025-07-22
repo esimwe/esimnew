@@ -1,0 +1,262 @@
+// Prisma schema
+
+// Veritabanı bağlantısı
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modeller
+model Order {
+  id                      Int       @id @default(autoincrement())
+  userid                  String?
+  orderid                 String?   @unique
+  orderstate              String?
+  merchantid              String?
+  externalid              String?
+  currencycode            String?
+  createdtime             DateTime  @default(now())
+  updatedtime             DateTime  @updatedAt
+  productid               String?
+  productcategory         String?
+  cost                    Decimal   @db.Decimal(10, 2)
+  title                   String?
+  provider                String?
+  providerid              Int?
+  providername            String?
+  providerlogo            String?
+  qrcode                  String?   @db.Text
+  phone                   String?
+  isrefundable            Boolean?  @default(false)
+  accesspointname         String?
+  activationcode          String?
+  smdpaddress             String?
+  activationinstructions  String?   @db.VarChar(512)
+  user                    User?     @relation(fields: [userid], references: [id])
+
+  @@map("orders")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  rewardBalance     Decimal?  @default(0) @db.Decimal(10, 2)
+  referralCode      String?   @unique @db.VarChar(8)
+  referredBy        String?   
+  firstPurchase     Boolean?  @default(false)
+  verifyToken       String?
+  verifyTokenExpiry DateTime?
+  membership        String?   @default("standard")
+  locale            String?   @default("en") // Kullanıcı dil tercihi
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  orders            Order[]
+  referrals         Referral[] @relation("ReferrerUser")
+  referredByUser    Referral[] @relation("ReferredUser")
+
+  @@map("users")
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  referrerId    String
+  referredId    String
+  status        String   @default("pending") // pending, completed
+  bonusAmount   Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+  referrer      User     @relation("ReferrerUser", fields: [referrerId], references: [id])
+  referred      User     @relation("ReferredUser", fields: [referredId], references: [id])
+
+  @@unique([referrerId, referredId])
+  @@map("referrals")
+}
+
+model RewardHistory {
+  id             String   @id @default(cuid())
+  userId         String
+  type           String   // purchase, referral, bonus
+  amount         Decimal  @db.Decimal(10, 2)
+  description    String?
+  balanceBefore  Decimal  @db.Decimal(10, 2)
+  balanceAfter   Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+
+  @@map("reward_history")
+}
+
+model AdminKey {
+  id          Int     @id @default(autoincrement())
+  merchantId  String?
+  apiKey      String?
+
+  @@map("admin_keys")
+}
+
+model SiteTitle {
+  id     Int     @id @default(autoincrement())
+  title  String?
+
+  @@map("site_title")
+}
+
+// Ürün ve Kategori Modelleri
+model Country {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String    @db.VarChar(2)
+  region      String?
+  flagUrl     String?
+  isPopular   Boolean   @default(false)
+  status      String?   @default("active") @db.VarChar(50)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  translations CountryTranslation[]
+
+  @@map("countries")
+}
+
+model ProductCategory {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  status      String?   @default("active") @db.VarChar(50)
+  createdAt   DateTime  @default(now())
+  products    Product[]
+  translations ProductCategoryTranslation[]
+
+  @@map("product_categories")
+}
+
+model Provider {
+  id            Int       @id @default(autoincrement())
+  name          String
+  logo          String?
+  apiEndpoint   String?
+  apiKey        String?
+  apiSecret     String?
+  status        String?   @default("active") @db.VarChar(50)
+  createdAt     DateTime  @default(now())
+  products      Product[]
+
+  @@map("providers")
+}
+
+model Product {
+  id                Int             @id @default(autoincrement())
+  title             String
+  description       String?         @db.Text
+  productId         String          @unique
+  providerId        Int?
+  provider          Provider?       @relation(fields: [providerId], references: [id])
+  dataAmount        String
+  validityDays      Int
+  price             Decimal         @db.Decimal(10, 2)
+  discountPrice     Decimal?        @db.Decimal(10, 2)
+  currencyCode      String?         @default("USD") @db.VarChar(3)
+  countryId         Int?
+  country           Country?        @relation(fields: [countryId], references: [id])
+  categoryId        Int?
+  category          ProductCategory? @relation(fields: [categoryId], references: [id])
+  type              String?         @default("country") @db.VarChar(50)
+  instructions      String?         @db.Text
+  accessPointName   String?
+  featured          Boolean?        @default(false)
+  status            String?         @default("active") @db.VarChar(50)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  translations      ProductTranslation[]
+
+  @@map("products")
+}
+
+// Referans Sistemi için Ayar Tablosu
+model SystemSettings {
+  id                    Int       @id @default(autoincrement())
+  referralBonusAmount   Decimal   @default(10.00) @db.Decimal(10, 2)
+  referralCodeLength    Int       @default(8)
+  minimumWithdrawal     Decimal   @default(50.00) @db.Decimal(10, 2)
+  defaultLocale         String    @default("en")
+  updatedAt             DateTime  @updatedAt
+
+  @@map("system_settings")
+}
+
+// Çoklu Dil Desteği için Modeller
+model Language {
+  id             String   @id @default(cuid())
+  code           String   @unique // ISO kodu (en, es, fr, de, vb.)
+  name           String   // İngilizce dil adı (English, Spanish, French, vb.)
+  nativeName     String   // Kendi dilindeki adı (English, Español, Français, vb.)
+  isActive       Boolean  @default(true)
+  isDefault      Boolean  @default(false)
+  rtl            Boolean  @default(false) // Sağdan sola yazım
+  flagIcon       String?  // Dil bayrağı ikonu
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  countryTranslations    CountryTranslation[]
+  productTranslations    ProductTranslation[]
+  categoryTranslations   ProductCategoryTranslation[]
+  staticTranslations     StaticTranslation[]
+
+  @@map("languages")
+}
+
+model CountryTranslation {
+  id          String   @id @default(cuid())
+  countryId   Int
+  languageCode String
+  name        String
+  country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  language    Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+
+  @@unique([countryId, languageCode])
+  @@map("country_translations")
+}
+
+model ProductTranslation {
+  id          String   @id @default(cuid())
+  productId   Int
+  languageCode String
+  title       String
+  description String?  @db.Text
+  instructions String? @db.Text
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  language    Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+
+  @@unique([productId, languageCode])
+  @@map("product_translations")
+}
+
+model ProductCategoryTranslation {
+  id          String   @id @default(cuid())
+  categoryId  Int
+  languageCode String
+  name        String
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  language    Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+
+  @@unique([categoryId, languageCode])
+  @@map("category_translations")
+}
+
+model StaticTranslation {
+  id           String   @id @default(cuid())
+  languageCode String
+  namespace    String   // Gruplama için (common, checkout, homepage, vb.)
+  key          String   // Çeviri anahtarı
+  value        String   @db.Text // Çevrilmiş değer
+  language     Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+
+  @@unique([languageCode, namespace, key])
+  @@map("static_translations")
+}
