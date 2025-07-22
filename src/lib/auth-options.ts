@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
           referralCode: user.referralCode,
           locale: user.locale || 'en',
-          role: user.membership, // membership alanını role olarak kullan
+          role: user.membership || undefined, // membership alanını role olarak kullan, null değil undefined olmalı
         };
       },
     }),
