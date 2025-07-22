@@ -45,9 +45,14 @@ export async function POST(request: NextRequest) {
       },
     });
     
-    // Referral kodu ata
-    const { referralService } = await import('@/lib/referral-service');
-    await referralService.assignReferralCode(user.id);
+    // Referral kodu ata (güvenli implementasyon)
+    try {
+      const { referralServiceSafe } = await import('@/lib/referral-service-safe');
+      await referralServiceSafe.assignReferralCode(user.id);
+    } catch (error) {
+      console.error('Referral kodu atanırken hata oluştu:', error);
+      // Referral kodu atama hatası kritik değil, işleme devam et
+    }
     
     // Başarılı yanıt
     return NextResponse.json(
