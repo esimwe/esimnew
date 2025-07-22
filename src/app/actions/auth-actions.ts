@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/lib/auth-actions-helpers';
 
 /**
  * Kullanıcı kaydı için server action
@@ -40,10 +40,8 @@ export async function registerUser(formData: FormData) {
         email,
         password: hashedPassword,
         name: `${firstName} ${lastName}`,
-        phone,
         locale,
         membership: 'STANDARD',
-        status: 'ACTIVE',
       },
     });
 
@@ -51,12 +49,8 @@ export async function registerUser(formData: FormData) {
     const { referralService } = await import('@/lib/referral-service');
     await referralService.assignReferralCode(user.id);
 
-    // Yeni kullanıcıyla oturum açma işlemi
-    await signIn('credentials', {
-      email,
-      password,
-      callbackUrl: `/${locale}`
-    });
+    // Redirect to login page with success message
+    return { success: true, redirect: `/${locale}/login?registered=true` };
 
     return { success: true };
   } catch (error) {
@@ -75,15 +69,34 @@ export async function loginUser(formData: FormData) {
   const callbackUrl = formData.get('callbackUrl') as string || `/${locale}`;
 
   try {
-    await signIn('credentials', {
-      email,
-      password,
-      callbackUrl
+    // Kullanıcıyı bul
+    const user = await prisma.user.findUnique({
+      where: { email }
     });
+
+    if (!user || !user.password) {
+      return { success: false, message: 'Invalid email or password' };
+    }
+
+    // Şifre doğrulama
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     
-    return { success: true };
+    if (!isPasswordValid) {
+      return { success: false, message: 'Invalid email or password' };
+    }
+
+    // Admin kontrolü - admin dashboard'a yönlendiriyorsak
+    if (callbackUrl.includes('/admin/') && user.membership !== 'ADMIN') {
+      return { success: false, message: 'You do not have admin access' };
+    }
+    
+    // Başarılı giriş - redirect URL döndür
+    return { 
+      success: true, 
+      redirect: callbackUrl
+    };
   } catch (error) {
     console.error('Login error:', error);
-    return { success: false, message: 'Invalid email or password' };
+    return { success: false, message: 'Server error during login' };
   }
 }
