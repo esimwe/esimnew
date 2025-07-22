@@ -62,6 +62,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
           referralCode: user.referralCode,
           locale: user.locale || 'en',
+          role: user.membership, // membership alanını role olarak kullan
         };
       },
     }),
@@ -81,6 +82,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.referralCode = user.referralCode;
         token.locale = user.locale || 'en';
+        token.role = user.role || 'standard'; // rolü token'a ekle
       }
 
       // Kullanıcı profili güncellendiğinde
@@ -97,6 +99,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.referralCode = token.referralCode as string | null;
         session.user.locale = token.locale as string || 'en';
+        session.user.role = token.role as string || 'standard'; // rolü session'a ekle
       }
       return session;
     },
@@ -142,6 +145,7 @@ declare module 'next-auth' {
     id: string;
     referralCode?: string | null;
     locale?: string;
+    role?: string;
   }
 
   interface Session {
@@ -149,6 +153,7 @@ declare module 'next-auth' {
       id: string;
       referralCode?: string | null;
       locale?: string;
+      role?: string;
     } & DefaultSession['user'];
   }
 }
@@ -158,6 +163,7 @@ declare module 'next-auth/jwt' {
     id: string;
     referralCode?: string | null;
     locale?: string;
+    role?: string;
   }
 }
 
