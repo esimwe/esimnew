@@ -8,6 +8,7 @@ import { referralService } from '@/lib/referral-service';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth-options';
+import prisma from '@/lib/prisma';
 
 // Metadata generator
 export async function generateMetadata({ params }: { params: { locale: string } }) {
