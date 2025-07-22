@@ -105,7 +105,7 @@ export const referralService = {
       
       // Sistem ayarlarından bonus miktarını al
       const settings = await prisma.systemSettings.findFirst();
-      const bonusAmount = settings?.referralBonusAmount || 10.00;
+      const bonusAmount = settings?.referralBonusAmount ? Number(settings.referralBonusAmount) : 10.00;
       
       // Referans veren kullanıcıyı bul
       const referrer = await prisma.user.findUnique({
@@ -131,7 +131,8 @@ export const referralService = {
       });
       
       // Referans veren kullanıcının bakiyesini güncelle
-      const newBalance = (referrer.rewardBalance || 0) + bonusAmount;
+      const currentBalance = referrer.rewardBalance ? Number(referrer.rewardBalance) : 0;
+      const newBalance = currentBalance + bonusAmount;
       
       await prisma.user.update({
         where: { id: referrer.id },
@@ -145,7 +146,7 @@ export const referralService = {
           type: 'referral',
           amount: bonusAmount,
           description: `${user.name || user.email} kullanıcısını davet ettiğiniz için bonus`,
-          balanceBefore: referrer.rewardBalance || 0,
+          balanceBefore: currentBalance,
           balanceAfter: newBalance
         }
       });
@@ -226,7 +227,7 @@ export const referralService = {
         return false;
       }
       
-      const currentBalance = user.rewardBalance || 0;
+      const currentBalance = user.rewardBalance ? Number(user.rewardBalance) : 0;
       
       // İşlem sonrası yeni bakiye (Çıkarma işlemi için negatif değer verilmeli)
       const newBalance = currentBalance + amount;
