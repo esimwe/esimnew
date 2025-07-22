@@ -35,8 +35,10 @@ export default function RegisterForm({ locale, translations }: RegisterFormProps
       
       if (!result.success) {
         setError(result.message || translations.registrationFailed || 'Registration failed');
+      } else if (result.redirect) {
+        // Successful registration with redirect URL
+        window.location.href = result.redirect;
       }
-      // Successful registration will redirect automatically via the server action
     } catch (err) {
       setError(translations.registrationFailed || 'Registration failed');
     } finally {

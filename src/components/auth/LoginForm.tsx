@@ -25,8 +25,10 @@ export default function LoginForm({ locale, translations }: LoginFormProps) {
       
       if (!result.success) {
         setError(result.message || translations.loginFailed || 'Login failed');
+      } else if (result.redirect) {
+        // Successful login with redirect URL
+        window.location.href = result.redirect;
       }
-      // Successful login will redirect automatically via the server action
     } catch (err) {
       setError(translations.loginFailed || 'Login failed');
     } finally {
