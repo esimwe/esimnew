@@ -36,7 +36,17 @@ export default async function ReferralPage({ params }: { params: { locale: strin
   
   // Kullanıcının referans bilgilerini getir
   const userId = session.user.id as string;
-  const referralData = await referralService.getUserReferrals(userId);
+  const referralDataRaw = await referralService.getUserReferrals(userId);
+  
+  // Decimal tiplerini number'a çevir
+  const referralData = {
+    ...referralDataRaw,
+    totalEarned: Number(referralDataRaw.totalEarned),
+    referrals: referralDataRaw.referrals.map(ref => ({
+      ...ref,
+      bonusAmount: Number(ref.bonusAmount)
+    }))
+  };
   
   // Kullanıcının referans kodu yoksa oluştur
   if (!session.user.referralCode) {
@@ -44,7 +54,7 @@ export default async function ReferralPage({ params }: { params: { locale: strin
   }
   
   // Güncel kullanıcı bilgilerini getir
-  const user = await prisma.user.findUnique({
+  const userData = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -56,8 +66,21 @@ export default async function ReferralPage({ params }: { params: { locale: strin
     }
   });
   
+  // Prisma'dan gelen Decimal tipini number'a dönüştür
+  const user = userData ? {
+    ...userData,
+    rewardBalance: userData.rewardBalance ? Number(userData.rewardBalance) : null
+  } : null;
+  
   // Sistem ayarlarını getir
-  const settings = await prisma.systemSettings.findFirst();
+  const settingsData = await prisma.systemSettings.findFirst();
+  
+  // Decimal tipini number'a dönüştür
+  const settings = settingsData ? {
+    ...settingsData,
+    referralBonusAmount: settingsData.referralBonusAmount ? Number(settingsData.referralBonusAmount) : 10.00,
+    minimumWithdrawal: settingsData.minimumWithdrawal ? Number(settingsData.minimumWithdrawal) : 50.00
+  } : null;
   
   // Mevcut sitenin tam URL'si
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://yourdomain.com';
