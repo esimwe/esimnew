@@ -29,7 +29,8 @@ function AdminLoginForm({ locale, translations }: { locale: string; translations
         </p>
       </div>
       
-      <form className="mt-8 space-y-6" action="#" method="POST">
+      <form className="mt-8 space-y-6" action="/api/auth/signin/credentials" method="POST">
+        <input type="hidden" name="callbackUrl" value={`/${locale}/admin/dashboard`} />
         <div className="rounded-md shadow-sm -space-y-px">
           <div>
             <label htmlFor="email-address" className="sr-only">

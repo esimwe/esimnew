@@ -35,7 +35,8 @@ function LoginForm({ locale, translations }: { locale: string; translations: any
         </p>
       </div>
       
-      <form className="mt-8 space-y-6" action="#" method="POST">
+      <form className="mt-8 space-y-6" action="/api/auth/signin/credentials" method="POST">
+        <input type="hidden" name="callbackUrl" value={`/${locale}`} />
         <input type="hidden" name="remember" value="true" />
         <div className="rounded-md shadow-sm -space-y-px">
           <div>
