@@ -281,36 +281,49 @@ async function main() {
   });
 
   // Çevirileri oluştur
-  await prisma.staticTranslation.createMany({
-    data: [
-      // Genel çeviriler
-      { languageCode: 'en', namespace: 'common', key: 'home', value: 'Home' },
-      { languageCode: 'tr', namespace: 'common', key: 'home', value: 'Ana Sayfa' },
-      { languageCode: 'en', namespace: 'common', key: 'esims', value: 'eSIMs' },
-      { languageCode: 'tr', namespace: 'common', key: 'esims', value: 'eSIM\'ler' },
-      { languageCode: 'en', namespace: 'common', key: 'login', value: 'Login' },
-      { languageCode: 'tr', namespace: 'common', key: 'login', value: 'Giriş Yap' },
-      { languageCode: 'en', namespace: 'common', key: 'register', value: 'Register' },
-      { languageCode: 'tr', namespace: 'common', key: 'register', value: 'Kayıt Ol' },
-      { languageCode: 'en', namespace: 'common', key: 'logout', value: 'Logout' },
-      { languageCode: 'tr', namespace: 'common', key: 'logout', value: 'Çıkış Yap' },
-      { languageCode: 'en', namespace: 'common', key: 'cart', value: 'Cart' },
-      { languageCode: 'tr', namespace: 'common', key: 'cart', value: 'Sepet' },
-      
-      // eSIM sayfası için çeviriler
-      { languageCode: 'en', namespace: 'esim', key: 'esimPageTitle', value: 'Browse eSIM Plans' },
-      { languageCode: 'tr', namespace: 'esim', key: 'esimPageTitle', value: 'eSIM Planlarına Göz Atın' },
-      { languageCode: 'en', namespace: 'esim', key: 'viewDetails', value: 'View Details' },
-      { languageCode: 'tr', namespace: 'esim', key: 'viewDetails', value: 'Detayları Gör' },
-      
-      // Sepet sayfası için çeviriler
-      { languageCode: 'en', namespace: 'cart', key: 'cartPageTitle', value: 'Your Shopping Cart' },
-      { languageCode: 'tr', namespace: 'cart', key: 'cartPageTitle', value: 'Alışveriş Sepetiniz' },
-      { languageCode: 'en', namespace: 'cart', key: 'proceedToCheckout', value: 'Proceed to Checkout' },
-      { languageCode: 'tr', namespace: 'cart', key: 'proceedToCheckout', value: 'Ödemeye Geç' },
-    ],
-    skipDuplicates: true,
-  });
+  // SQLite, createMany ile skipDuplicates'i desteklemediği için tek tek ekleyelim
+  const translations = [
+    // Genel çeviriler
+    { languageCode: 'en', namespace: 'common', key: 'home', value: 'Home' },
+    { languageCode: 'tr', namespace: 'common', key: 'home', value: 'Ana Sayfa' },
+    { languageCode: 'en', namespace: 'common', key: 'esims', value: 'eSIMs' },
+    { languageCode: 'tr', namespace: 'common', key: 'esims', value: 'eSIM\'ler' },
+    { languageCode: 'en', namespace: 'common', key: 'login', value: 'Login' },
+    { languageCode: 'tr', namespace: 'common', key: 'login', value: 'Giriş Yap' },
+    { languageCode: 'en', namespace: 'common', key: 'register', value: 'Register' },
+    { languageCode: 'tr', namespace: 'common', key: 'register', value: 'Kayıt Ol' },
+    { languageCode: 'en', namespace: 'common', key: 'logout', value: 'Logout' },
+    { languageCode: 'tr', namespace: 'common', key: 'logout', value: 'Çıkış Yap' },
+    { languageCode: 'en', namespace: 'common', key: 'cart', value: 'Cart' },
+    { languageCode: 'tr', namespace: 'common', key: 'cart', value: 'Sepet' },
+    
+    // eSIM sayfası için çeviriler
+    { languageCode: 'en', namespace: 'esim', key: 'esimPageTitle', value: 'Browse eSIM Plans' },
+    { languageCode: 'tr', namespace: 'esim', key: 'esimPageTitle', value: 'eSIM Planlarına Göz Atın' },
+    { languageCode: 'en', namespace: 'esim', key: 'viewDetails', value: 'View Details' },
+    { languageCode: 'tr', namespace: 'esim', key: 'viewDetails', value: 'Detayları Gör' },
+    
+    // Sepet sayfası için çeviriler
+    { languageCode: 'en', namespace: 'cart', key: 'cartPageTitle', value: 'Your Shopping Cart' },
+    { languageCode: 'tr', namespace: 'cart', key: 'cartPageTitle', value: 'Alışveriş Sepetiniz' },
+    { languageCode: 'en', namespace: 'cart', key: 'proceedToCheckout', value: 'Proceed to Checkout' },
+    { languageCode: 'tr', namespace: 'cart', key: 'proceedToCheckout', value: 'Ödemeye Geç' },
+  ];
+
+  // Her çeviriyi tek tek ekle
+  for (const translation of translations) {
+    await prisma.staticTranslation.upsert({
+      where: {
+        languageCode_namespace_key: {
+          languageCode: translation.languageCode,
+          namespace: translation.namespace,
+          key: translation.key
+        }
+      },
+      update: { value: translation.value },
+      create: translation
+    });
+  }
 
   console.log('Seed verileri başarıyla eklendi');
 }
