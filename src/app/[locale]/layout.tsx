@@ -33,7 +33,7 @@ export default async function LocaleLayout({
   const languageOptions = supportedLocales.map(lang => ({
     value: lang.code,
     label: lang.nativeName,
-    flag: lang.flagIcon || undefined
+    flag: 'flagIcon' in lang ? lang.flagIcon || undefined : undefined
   }));
   
   return (
