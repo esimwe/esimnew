@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
+import prisma from '@/lib/prisma';
+
+export async function POST(request: NextRequest) {
+  try {
+    const data = await request.formData();
+    const email = data.get('email') as string;
+    const password = data.get('password') as string;
+    const firstName = data.get('firstName') as string;
+    const lastName = data.get('lastName') as string;
+    const phone = data.get('phone') as string || null;
+    
+    // Temel doğrulama
+    if (!email || !password || !firstName || !lastName) {
+      return NextResponse.json(
+        { success: false, message: 'Required fields are missing' },
+        { status: 400 }
+      );
+    }
+    
+    // E-posta kontrolü
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+    
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, message: 'Email already in use' },
+        { status: 400 }
+      );
+    }
+    
+    // Şifre hashle
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Kullanıcı oluştur
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name: `${firstName} ${lastName}`,
+        phone,
+        locale: 'en', // Varsayılan dil
+        membership: 'STANDARD', // Varsayılan üyelik tipi
+        status: 'ACTIVE',
+      },
+    });
+    
+    // Referral kodu ata
+    const { referralService } = await import('@/lib/referral-service');
+    await referralService.assignReferralCode(user.id);
+    
+    // Başarılı yanıt
+    return NextResponse.json(
+      { success: true, message: 'User registered successfully' },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Registration error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Server error during registration' },
+      { status: 500 }
+    );
+  }
+}
