@@ -1,4 +1,18 @@
-import { cache } from 'react';
+// React 18 için cache fonksiyonu
+function clientCache<T>(fn: (...args: any[]) => Promise<T>): (...args: any[]) => Promise<T> {
+  const cache = new Map();
+  
+  return async (...args) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    
+    const result = await fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+const cache = clientCache;
 import { languageService } from '@/lib/language-service';
 import { match } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
