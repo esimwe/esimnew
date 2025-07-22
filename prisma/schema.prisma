@@ -23,19 +23,19 @@ model Order {
   updatedtime             DateTime  @updatedAt
   productid               String?
   productcategory         String?
-  cost                    Decimal   @db.Decimal(10, 2)
+  cost                    Decimal
   title                   String?
   provider                String?
   providerid              Int?
   providername            String?
   providerlogo            String?
-  qrcode                  String?   @db.Text
+  qrcode                  String?
   phone                   String?
   isrefundable            Boolean?  @default(false)
   accesspointname         String?
   activationcode          String?
   smdpaddress             String?
-  activationinstructions  String?   @db.VarChar(512)
+  activationinstructions  String?
   user                    User?     @relation(fields: [userid], references: [id])
 
   @@map("orders")
@@ -48,8 +48,8 @@ model User {
   emailVerified     DateTime?
   image             String?
   password          String?
-  rewardBalance     Decimal?  @default(0) @db.Decimal(10, 2)
-  referralCode      String?   @unique @db.VarChar(8)
+  rewardBalance     Decimal?  @default(0)
+  referralCode      String?   @unique
   referredBy        String?   
   firstPurchase     Boolean?  @default(false)
   verifyToken       String?
@@ -70,7 +70,7 @@ model Referral {
   referrerId    String
   referredId    String
   status        String   @default("pending") // pending, completed
-  bonusAmount   Decimal  @default(0) @db.Decimal(10, 2)
+  bonusAmount   Decimal  @default(0)
   createdAt     DateTime @default(now())
   completedAt   DateTime?
   referrer      User     @relation("ReferrerUser", fields: [referrerId], references: [id])
@@ -84,10 +84,10 @@ model RewardHistory {
   id             String   @id @default(cuid())
   userId         String
   type           String   // purchase, referral, bonus
-  amount         Decimal  @db.Decimal(10, 2)
+  amount         Decimal
   description    String?
-  balanceBefore  Decimal  @db.Decimal(10, 2)
-  balanceAfter   Decimal  @db.Decimal(10, 2)
+  balanceBefore  Decimal
+  balanceAfter   Decimal
   createdAt      DateTime @default(now())
 
   @@map("reward_history")
@@ -112,11 +112,11 @@ model SiteTitle {
 model Country {
   id          Int       @id @default(autoincrement())
   name        String
-  code        String    @db.VarChar(2)
+  code        String
   region      String?
   flagUrl     String?
   isPopular   Boolean   @default(false)
-  status      String?   @default("active") @db.VarChar(50)
+  status      String?   @default("active")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[]
@@ -129,7 +129,7 @@ model ProductCategory {
   id          Int       @id @default(autoincrement())
   name        String
   slug        String    @unique
-  status      String?   @default("active") @db.VarChar(50)
+  status      String?   @default("active")
   createdAt   DateTime  @default(now())
   products    Product[]
   translations ProductCategoryTranslation[]
@@ -144,7 +144,7 @@ model Provider {
   apiEndpoint   String?
   apiKey        String?
   apiSecret     String?
-  status        String?   @default("active") @db.VarChar(50)
+  status        String?   @default("active")
   createdAt     DateTime  @default(now())
   products      Product[]
 
@@ -154,24 +154,24 @@ model Provider {
 model Product {
   id                Int             @id @default(autoincrement())
   title             String
-  description       String?         @db.Text
+  description       String?
   productId         String          @unique
   providerId        Int?
   provider          Provider?       @relation(fields: [providerId], references: [id])
   dataAmount        String
   validityDays      Int
-  price             Decimal         @db.Decimal(10, 2)
-  discountPrice     Decimal?        @db.Decimal(10, 2)
-  currencyCode      String?         @default("USD") @db.VarChar(3)
+  price             Decimal
+  discountPrice     Decimal?
+  currencyCode      String?         @default("USD")
   countryId         Int?
   country           Country?        @relation(fields: [countryId], references: [id])
   categoryId        Int?
   category          ProductCategory? @relation(fields: [categoryId], references: [id])
-  type              String?         @default("country") @db.VarChar(50)
-  instructions      String?         @db.Text
+  type              String?         @default("country")
+  instructions      String?
   accessPointName   String?
   featured          Boolean?        @default(false)
-  status            String?         @default("active") @db.VarChar(50)
+  status            String?         @default("active")
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   translations      ProductTranslation[]
@@ -182,9 +182,9 @@ model Product {
 // Referans Sistemi için Ayar Tablosu
 model SystemSettings {
   id                    Int       @id @default(autoincrement())
-  referralBonusAmount   Decimal   @default(10.00) @db.Decimal(10, 2)
+  referralBonusAmount   Decimal   @default(10.00)
   referralCodeLength    Int       @default(8)
-  minimumWithdrawal     Decimal   @default(50.00) @db.Decimal(10, 2)
+  minimumWithdrawal     Decimal   @default(50.00)
   defaultLocale         String    @default("en")
   updatedAt             DateTime  @updatedAt
 
@@ -228,8 +228,8 @@ model ProductTranslation {
   productId   Int
   languageCode String
   title       String
-  description String?  @db.Text
-  instructions String? @db.Text
+  description String?
+  instructions String?
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   language    Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
 
@@ -254,7 +254,7 @@ model StaticTranslation {
   languageCode String
   namespace    String   // Gruplama için (common, checkout, homepage, vb.)
   key          String   // Çeviri anahtarı
-  value        String   @db.Text // Çevrilmiş değer
+  value        String   // Çevrilmiş değer
   language     Language @relation(fields: [languageCode], references: [code], onDelete: Cascade)
 
   @@unique([languageCode, namespace, key])
