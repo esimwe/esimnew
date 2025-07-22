@@ -40,10 +40,8 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         name: `${firstName} ${lastName}`,
-        phone,
         locale: 'en', // Varsayılan dil
         membership: 'STANDARD', // Varsayılan üyelik tipi
-        status: 'ACTIVE',
       },
     });
     
