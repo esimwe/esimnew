@@ -52,7 +52,6 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
+    // Typography ve Forms eklentileri kaldırıldı
   ],
 };
